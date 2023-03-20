@@ -22,8 +22,8 @@ let currentState = [
 let selectedCells: Point[] = [];
 
 // TODO: Rename
-const getNewState = () => {
-  return currentState.map((row, rowIndex) =>
+const getNewStateFromData = (data: typeof currentState) => {
+  return data.map((row, rowIndex) =>
     row.map((cell, columnIndex) => {
       const isSelected = selectedCells.some(
         (selectedCell) =>
@@ -45,15 +45,15 @@ socket.on("connection", (socket) => {
     socket.emit("dataChange", currentState);
   });
 
-  socket.on("cellSelect", (cells) => {
+  socket.on("cellSelect", (cells: Point[]) => {
     selectedCells = cells;
-    const newData = getNewState();
+    const newData = getNewStateFromData(currentState);
     currentState = newData;
     socket.broadcast.emit("dataChange", currentState);
   });
 
   socket.on("dataChange", (data: typeof currentState) => {
-    const newState = getNewState();
+    const newState = getNewStateFromData(data);
     currentState = newState;
     socket.broadcast.emit("dataChange", currentState);
   });
