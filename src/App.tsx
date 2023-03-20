@@ -8,46 +8,47 @@ function App() {
     [{ value: "" }, { value: "" }],
   ]);
 
+  const [selected, setSelected] = useState<Point[]>([]);
+
   useEffect(() => {
     socket.emit("getCurrentState");
 
     const onDataChange = (newData: typeof data) => {
-      if (!newData.length) return;
+      console.log(newData);
       setData(newData);
     };
 
-    const onCellSelect = (selectedCells: Point[]) => {
-      const newMatrix = data.map((row, rowIndex) =>
-        row.map((cell, columnIndex) => {
-          const isSelected = selectedCells.some(
-            (cell) => cell.row === rowIndex && cell.column === columnIndex
-          );
-
-          return {
-            ...cell,
-            className: isSelected ? "ring" : "",
-          };
-        })
-      );
-
-      setData(newMatrix);
-    };
-
     socket.on("dataChange", onDataChange);
-    socket.on("cellSelect", onCellSelect);
 
     return () => {
       socket.off("dataChange", onDataChange);
-      socket.off("cellSelect", onCellSelect);
     };
-  }, []);
+  }, [setData]);
 
   return (
     <>
       <Spreadsheet
         data={data}
-        onSelect={(p) => socket.emit("cellSelect", p)}
-        onChange={(data) => socket.emit("dataChange", data)}
+        onSelect={(p) => {
+          setSelected(p);
+          socket.emit("cellSelect", p);
+        }}
+        onChange={(d) => {
+          const newData = d.map((row, rowIndex) =>
+            row.map((cell, columnIndex) => {
+              const isSelected = selected.some(
+                (cell: any) =>
+                  cell.row === rowIndex && cell.column === columnIndex
+              );
+
+              return {
+                ...cell,
+                className: isSelected ? "border-2 border-blue-500" : "",
+              };
+            })
+          );
+          socket.emit("dataChange", newData);
+        }}
       />
     </>
   );

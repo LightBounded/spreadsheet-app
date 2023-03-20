@@ -13,7 +13,12 @@ const socket = new Server(server, {
   },
 });
 
-let data: any[][] = [];
+let data = [
+  [{ value: "" }, { value: "" }],
+  [{ value: "" }, { value: "" }],
+];
+
+let selectedCells: any[] = [];
 
 socket.on("connection", (socket) => {
   console.log("a user has connected");
@@ -22,13 +27,27 @@ socket.on("connection", (socket) => {
     socket.emit("dataChange", data);
   });
 
-  socket.on("dataChange", (newData) => {
+  socket.on("cellSelect", (cells) => {
+    selectedCells = cells;
+    const newData = data.map((row, rowIndex) =>
+      row.map((cell, columnIndex) => {
+        const isSelected = selectedCells.some(
+          (cell: any) => cell.row === rowIndex && cell.column === columnIndex
+        );
+
+        return {
+          ...cell,
+          className: isSelected ? "border-2 border-blue-500" : "",
+        };
+      })
+    );
     data = newData;
     socket.broadcast.emit("dataChange", newData);
   });
 
-  socket.on("cellSelect", (selectedCells) => {
-    socket.broadcast.emit("cellSelect", selectedCells);
+  socket.on("dataChange", (newData) => {
+    data = newData;
+    socket.broadcast.emit("dataChange", data);
   });
 
   socket.on("disconnect", () => {
