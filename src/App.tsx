@@ -13,10 +13,7 @@ function App() {
   useEffect(() => {
     socket.emit("getCurrentState");
 
-    const onDataChange = (newData: typeof data) => {
-      console.log(newData);
-      setData(newData);
-    };
+    const onDataChange = (newData: typeof data) => setData(newData);
 
     socket.on("dataChange", onDataChange);
 
