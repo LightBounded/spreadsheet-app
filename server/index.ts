@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import { createServer } from "http";
+import { Point } from "react-spreadsheet";
 import { Server } from "socket.io";
 
 const app = express();
@@ -13,41 +14,48 @@ const socket = new Server(server, {
   },
 });
 
-let data = [
+let currentState = [
   [{ value: "" }, { value: "" }],
   [{ value: "" }, { value: "" }],
 ];
 
-let selectedCells: any[] = [];
+let selectedCells: Point[] = [];
+
+// TODO: Rename
+const getNewState = () => {
+  return currentState.map((row, rowIndex) =>
+    row.map((cell, columnIndex) => {
+      const isSelected = selectedCells.some(
+        (selectedCell) =>
+          selectedCell.row === rowIndex && selectedCell.column === columnIndex
+      );
+
+      return {
+        ...cell,
+        className: isSelected ? "selected" : "",
+      };
+    })
+  );
+};
 
 socket.on("connection", (socket) => {
   console.log("a user has connected");
 
   socket.on("getCurrentState", () => {
-    socket.emit("dataChange", data);
+    socket.emit("dataChange", currentState);
   });
 
   socket.on("cellSelect", (cells) => {
     selectedCells = cells;
-    const newData = data.map((row, rowIndex) =>
-      row.map((cell, columnIndex) => {
-        const isSelected = selectedCells.some(
-          (cell: any) => cell.row === rowIndex && cell.column === columnIndex
-        );
-
-        return {
-          ...cell,
-          className: isSelected ? "border-2 border-blue-500" : "",
-        };
-      })
-    );
-    data = newData;
-    socket.broadcast.emit("dataChange", newData);
+    const newData = getNewState();
+    currentState = newData;
+    socket.broadcast.emit("dataChange", currentState);
   });
 
-  socket.on("dataChange", (newData) => {
-    data = newData;
-    socket.broadcast.emit("dataChange", data);
+  socket.on("dataChange", (data: typeof currentState) => {
+    const newState = getNewState();
+    currentState = newState;
+    socket.broadcast.emit("dataChange", currentState);
   });
 
   socket.on("disconnect", () => {
@@ -55,6 +63,7 @@ socket.on("connection", (socket) => {
   });
 });
 
+// Endpoint to test connection
 app.get("/ping", (req, res) => {
   res.send("pong!");
 });

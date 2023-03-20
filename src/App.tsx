@@ -31,20 +31,7 @@ function App() {
           socket.emit("cellSelect", p);
         }}
         onChange={(d) => {
-          const newData = d.map((row, rowIndex) =>
-            row.map((cell, columnIndex) => {
-              const isSelected = selected.some(
-                (cell: any) =>
-                  cell.row === rowIndex && cell.column === columnIndex
-              );
-
-              return {
-                ...cell,
-                className: isSelected ? "border-2 border-blue-500" : "",
-              };
-            })
-          );
-          socket.emit("dataChange", newData);
+          socket.emit("dataChange", d);
         }}
       />
     </>
