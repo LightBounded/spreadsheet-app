@@ -1,9 +1,11 @@
+import { PrismaClient } from "@prisma/client";
 import cors from "cors";
 import express from "express";
 import { createServer } from "http";
 import { Point } from "react-spreadsheet";
 import { Server } from "socket.io";
 
+const prisma = new PrismaClient();
 const app = express();
 app.use(cors());
 
